@@ -126,6 +126,19 @@ var (
 		MonitoringTool:    `{{ template "victorops.default.monitoring_tool" . }}`,
 	}
 
+	// DefaultStatuspalConfig defines default values for Statuspal configurations.
+	DefaultStatuspalConfig = StatuspalConfig{
+		NotifierConfig: NotifierConfig{
+			VSendResolved: true,
+		},
+		TitleMessage: `{{ template "statuspal.default.title_message" . }}`,
+		IncidentMessage: `{{ template "statuspal.default.incident_message" . }}`,
+		IncidentType: "minor",
+		NotifyTweet:  true,
+		NotifySlack:  true,
+		NotifyEmail:  true,
+	}
+
 	// DefaultPushoverConfig defines default values for Pushover configurations.
 	DefaultPushoverConfig = PushoverConfig{
 		NotifierConfig: NotifierConfig{
@@ -539,6 +552,36 @@ func (c *VictorOpsConfig) UnmarshalYAML(unmarshal func(interface{}) error) error
 		}
 	}
 
+	return nil
+}
+
+// StatuspalConfig configures notifications via Statuspal.
+type StatuspalConfig struct {
+	NotifierConfig `yaml:",inline" json:",inline"`
+
+	HTTPConfig *commoncfg.HTTPClientConfig `yaml:"http_config,omitempty" json:"http_config,omitempty"`
+
+	APIKey           Secret            `yaml:"api_key" json:"api_key"`
+	APIURL           *URL              `yaml:"api_url,omitempty" json:"api_url,omitempty"`
+	StatuspageDomain string            `yaml:"statuspage_domain" json:"statuspage_domain"`
+	TitleMessage     string            `yaml:"title_message" json:"title_message"`
+	IncidentMessage  string            `yaml:"incident_message" json:"incident_message"`
+	IncidentType     string            `yaml:"incident_type" json:"incident_type"`
+	ServiceIds       []int             `yaml:"service_ids" json:"service_ids"`
+	NotifyTweet      bool              `yaml:"notify_tweet" json:"notify_tweet"`
+	NotifySlack      bool              `yaml:"notify_slack" json:"notify_slack"`
+	NotifyEmail      bool              `yaml:"notify_email" json:"notify_email"`
+}
+
+func (c *StatuspalConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	*c = DefaultStatuspalConfig
+	type plain StatuspalConfig
+	if err := unmarshal((*plain)(c)); err != nil {
+		return err
+	}
+	if c.APIKey == "" {
+		return fmt.Errorf("missing API key in Statuspal config")
+	}
 	return nil
 }
 
