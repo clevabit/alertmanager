@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/alertmanager/notify/statuspal"
 	"net"
 	"net/http"
 	"net/url"
@@ -162,6 +163,9 @@ func buildReceiverIntegrations(nc *config.Receiver, tmpl *template.Template, log
 	}
 	for i, c := range nc.VictorOpsConfigs {
 		add("victorops", i, c, func(l log.Logger) (notify.Notifier, error) { return victorops.New(c, tmpl, l) })
+	}
+	for i, c := range nc.StatuspalConfigs {
+		add("statuspal", i, c, func(l log.Logger) (notify.Notifier, error) { return statuspal.New(c, tmpl, l) })
 	}
 	for i, c := range nc.PushoverConfigs {
 		add("pushover", i, c, func(l log.Logger) (notify.Notifier, error) { return pushover.New(c, tmpl, l) })
